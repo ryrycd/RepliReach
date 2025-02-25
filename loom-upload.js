@@ -2,7 +2,7 @@ import { setup } from "@loomhq/record-sdk";
 import { isSupported } from "@loomhq/record-sdk/is-supported";
 
 // Replace this with your actual public app ID from the Loom Developer Portal
-const PUBLIC_APP_ID = "YOUR_PUBLIC_APP_ID";
+const PUBLIC_APP_ID = "7210d750-47de-4117-9975-4e2ab023cd35";
 const BUTTON_ID = "loom-upload-button";
 
 (async function initLoomSDK() {

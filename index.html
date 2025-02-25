@@ -1,2 +1,62 @@
-<button id="loom-upload-button">Upload/Record to Loom</button>
-<script type="module" src="loom-upload.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Loom Upload Example</title>
+  </head>
+  <body>
+    <!-- A simple button that triggers Loom's recordSDK -->
+    <button id="loom-upload-button">Record or Upload to Loom</button>
+
+    <script type="module">
+      // We import from esm.run with the '@latest' or a pinned version (e.g. @3.2.2).
+      // For safety, you might want to pin a specific Loom SDK version:
+      //   e.g. 'https://esm.run/@loomhq/record-sdk@3.2.2?bundle'
+      
+      import { setup } from "https://esm.run/@loomhq/record-sdk@latest?bundle";
+      import { isSupported } from "https://esm.run/@loomhq/record-sdk@latest/is-supported?bundle";
+
+      // Replace with your Loom Public App ID from developer.loom.com
+      const PUBLIC_APP_ID = "YOUR_PUBLIC_APP_ID";
+      const BUTTON_ID = "loom-upload-button";
+
+      (async function initLoom() {
+        // 1. Check if Loom's recordSDK is supported
+        const { supported, error } = await isSupported();
+        console.log("Loom supported?", supported, "Error?", error);
+        if (!supported) {
+          console.warn("Loom recordSDK not supported:", error);
+          return;
+        }
+
+        // 2. Initialize Loom's recordSDK
+        try {
+          const { configureButton } = await setup({ publicAppId: PUBLIC_APP_ID });
+          console.log("Loom SDK initialized successfully.");
+
+          // 3. Attach SDK to our button
+          const button = document.getElementById(BUTTON_ID);
+          if (!button) {
+            console.warn(`No button found with ID #${BUTTON_ID}`);
+            return;
+          }
+
+          const sdkButton = configureButton({ element: button });
+          console.log("SDK button configured:", sdkButton);
+
+          // 4. Listen for the "upload-complete" event
+          sdkButton.on("upload-complete", (video) => {
+            console.log("Upload complete! Loom link:", video.sharedUrl);
+            // Optionally copy the link to clipboard:
+            // navigator.clipboard.writeText(video.sharedUrl).then(() => {
+            //   alert("Loom link copied to clipboard!");
+            // });
+          });
+
+        } catch (setupErr) {
+          console.error("Error in Loom setup:", setupErr);
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,42 +1,61 @@
 import { setup } from "@loomhq/record-sdk";
 import { isSupported } from "@loomhq/record-sdk/is-supported";
 
-// Replace this with your actual public app ID from the Loom Developer Portal
-const PUBLIC_APP_ID = "7210d750-47de-4117-9975-4e2ab023cd35";
+const PUBLIC_APP_ID = "YOUR_PUBLIC_APP_ID";
 const BUTTON_ID = "loom-upload-button";
 
 (async function initLoomSDK() {
   // 1. Check support
   const { supported, error } = await isSupported();
+  console.log("isSupported =>", supported, error);
   if (!supported) {
-    console.warn("Loom recordSDK not supported:", error);
+    console.warn("Loom is not supported:", error);
     return;
   }
 
-  // 2. Initialize recordSDK
-  const { configureButton } = await setup({
-    publicAppId: PUBLIC_APP_ID,
-    // If you're using a Custom SDK (paid tier), you'd replace publicAppId with jws, mode: 'custom', etc.
-  });
+  // 2. Setup recordSDK
+  let configureButton;
+  try {
+    const result = await setup({
+      publicAppId: PUBLIC_APP_ID,
+    });
+    configureButton = result.configureButton;
+    console.log("Loom setup success");
+  } catch (e) {
+    console.error("Error in Loom setup:", e);
+    return;
+  }
 
-  // 3. Attach SDK to button
+  // 3. Attach button
   const button = document.getElementById(BUTTON_ID);
   if (!button) {
-    console.warn(`No button found with ID #${BUTTON_ID}`);
+    console.warn("No button found with ID:", BUTTON_ID);
     return;
   }
 
   const sdkButton = configureButton({ element: button });
+  console.log("SDK button configured", sdkButton);
 
-  // 4. Listen for "upload-complete" event
-  sdkButton.on("upload-complete", (video) => {
-    // 5. Copy Loom share link to clipboard
-    if (video?.sharedUrl) {
-      navigator.clipboard.writeText(video.sharedUrl).then(() => {
-        console.log("Copied Loom link to clipboard:", video.sharedUrl);
-      });
-    } else {
-      console.log("No sharedUrl found in Loom video object:", video);
-    }
+  // 4. Log key lifecycle events
+  sdkButton.on("start", () => {
+    console.log("Recording start event!");
   });
+
+  sdkButton.on("recording-complete", (video) => {
+    console.log("Recording complete, but still uploading... Video:", video);
+  });
+
+  sdkButton.on("upload-complete", (video) => {
+    console.log("Upload complete! The Loom link is:", video.sharedUrl);
+  });
+
+  sdkButton.on("lifecycle-update", (state) => {
+    console.log("Lifecycle state =>", state);
+  });
+
+  // 5. If you want, you can also manually open on click
+  //    (But normally it's automatic once configured.)
+  // button.addEventListener("click", () => {
+  //   sdkButton.openPreRecordPanel();
+  // });
 })();
